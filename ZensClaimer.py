@@ -1,9 +1,11 @@
 """Claim zens from the Edyoda Website."""
+import time
+from sys import exit
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
 from conf import CHROMEDRIVER_PATH, USERNAME, PASSWORD
@@ -37,19 +39,22 @@ def login(driver: webdriver.Chrome, username=USERNAME, password=PASSWORD):
         Edyoda account password.
     """
     driver.get("https://edyoda.com")  # Open Edyoda website
-    # Wait for the popup as the popup appears only after the page loads
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div/div/form/div[1]')))
-    # click on login
-    driver.find_element_by_xpath('//*[@id="root"]/div/div[1]/header/div/div[1]/div/ul[2]/li[2]/button').click()
-
-    login_div_xpath = '//*[@id="root"]/div/div[1]/div[2]/div[2]/div/form/div'
-    driver.find_element_by_xpath(f'{login_div_xpath}/div[1]/div/input').send_keys(username)  # Type username
-    driver.find_element_by_xpath(f'{login_div_xpath}/div[2]/div/input').send_keys(password)  # Type password
-    driver.find_element_by_xpath('//*[@id="root"]/div/div[1]/div[2]/div[2]/div/div[4]/button[1]').click()  # Sign In
+    wait: WebDriverWait = WebDriverWait(driver, 15)
+    wait.until(ec.invisibility_of_element((By.XPATH, '//div[contains(@class, "Loader")]/svg')))
+    wait.until(
+        ec.element_to_be_clickable((By.XPATH, '//button[contains(text(), "Log") or contains(@id, "login")]'))).click()
+    wait.until(ec.presence_of_element_located(  # Type username
+        (By.XPATH, '//div[contains(@class, "Input")]/label[contains(text(), "sername")]/following-sibling::input')
+    )).send_keys(username)
+    driver.find_element_by_xpath(  # Type password
+        '//div[contains(@class, "Input")]/label[contains(text(), "assword")]/''following-sibling::input'
+    ).send_keys(password)
+    driver.find_element_by_xpath(  # Sign In
+        '//button[contains(text(), "SIGN IN") and contains(@class, "NonMobile")]').click()
 
 
 def claim(driver: webdriver.Chrome) -> bool:
-    """Trys to claim the daily Zens and returns True if successfully claimed, else False.
+    """Tries to claim the daily Zens and returns True if successfully claimed, else False.
 
     Parameters
     ----------
@@ -61,22 +66,21 @@ def claim(driver: webdriver.Chrome) -> bool:
     bool
         True if Zens claimed successfully, else False.
     """
-    driver.implicitly_wait(3)
-    # Click on daily zens icon
+    time.sleep(3)
     try:
-        driver.find_element_by_xpath('//*[@id="root"]/div/div[1]/header/div/div[1]/div/ul[2]/li[4]').click()
-        # Claim zens
-        driver.find_element_by_xpath('//*[@id="root"]/div/div[1]/header/div/div[1]/div/ul[2]/li[4]'
-                                     '/div[2]/div[2]/div/div/div/button[1]').click()
+        driver.find_element_by_xpath(  # Click on daily zens icon
+            '//li[contains(@class, "Container_")]//img[contains(@alt, "EdYoda Daily")]').click()
+        driver.find_element_by_xpath(  # Claim zens
+            '//li[contains(@class, "Container_")]//button[contains(text(), "CLAIM") and contains(@class, "NonMobile")]'
+        ).click()
     except NoSuchElementException:
         return False
     try:
-        # Click Done
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located(
-            (By.XPATH, '//*[@id="root"]/div/div[1]/div[3]/div[2]/div[2]/div/div/button[1]'))).click()
+        WebDriverWait(driver, 10).until(ec.presence_of_element_located(  # Click Done
+            (By.XPATH, '//button[contains(text(), "DONE") and contains(@class, "NonMobile")]'))).click()
     except TimeoutException:
+        print("Done dialog not found")
         return False
-    driver.implicitly_wait(0)
     return True
 
 
@@ -85,3 +89,5 @@ if __name__ == '__main__':
     login(driver)
     if claim(driver):
         driver.close()
+        print("Claim Success")
+        exit(0)

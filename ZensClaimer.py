@@ -40,11 +40,13 @@ def login(driver: webdriver.Chrome, username=USERNAME, password=PASSWORD):
     """
     driver.get("https://edyoda.com")  # Open Edyoda website
     wait: WebDriverWait = WebDriverWait(driver, 15)
-    wait.until(ec.invisibility_of_element((By.XPATH, '//div[contains(@class, "Loader")]/svg')))
+    wait.until(ec.invisibility_of_element(
+        (By.XPATH, '//div[contains(@class, "Loader")]/svg')))
     wait.until(
         ec.element_to_be_clickable((By.XPATH, '//button[contains(text(), "Log") or contains(@id, "login")]'))).click()
     wait.until(ec.presence_of_element_located(  # Type username
-        (By.XPATH, '//div[contains(@class, "Input")]/label[contains(text(), "sername")]/following-sibling::input')
+        (By.XPATH,
+         '//div[contains(@class, "Input")]/label[contains(text(), "sername")]/following-sibling::input')
     )).send_keys(username)
     driver.find_element_by_xpath(  # Type password
         '//div[contains(@class, "Input")]/label[contains(text(), "assword")]/''following-sibling::input'

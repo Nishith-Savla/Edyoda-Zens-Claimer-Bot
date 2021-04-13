@@ -1,6 +1,6 @@
 """Claim zens from the Edyoda Website."""
 import time
-from sys import exit
+import sys.exit
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
@@ -12,7 +12,7 @@ from conf import CHROMEDRIVER_PATH, PASSWORD, USERNAME
 
 
 def connect(executable_path=CHROMEDRIVER_PATH) -> webdriver.Chrome:
-    """Connects to the webdriver and returns the driver.
+    """Connect to the webdriver and returns the driver.
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ def connect(executable_path=CHROMEDRIVER_PATH) -> webdriver.Chrome:
 
 
 def login(driver: webdriver.Chrome, username=USERNAME, password=PASSWORD):
-    """Logs in to the Edyoda account.
+    """Log in to the Edyoda account.
 
     Parameters
     ----------
@@ -41,30 +41,35 @@ def login(driver: webdriver.Chrome, username=USERNAME, password=PASSWORD):
     """
     driver.get("https://edyoda.com")  # Open Edyoda website
     wait: WebDriverWait = WebDriverWait(driver, 15)
+
     wait.until(ec.invisibility_of_element(
         (By.XPATH, '//div[contains(@class, "Loader")]/svg')))
+
     wait.until(
         ec.element_to_be_clickable(
             (By.XPATH,
              '//button[contains(text(), "Log") or contains(@id, "login")]'))
     ).click()
+
     wait.until(ec.presence_of_element_located(  # Type username
         (By.XPATH,
          '//div[contains(@class, "Input")]/label[contains(text(), "sername")]/'
          'following-sibling::input')
     )).send_keys(username)
+
     driver.find_element_by_xpath(  # Type password
         '//div[contains(@class, "Input")]/label[contains(text(), "assword")]/'
         'following-sibling::input'
     ).send_keys(password)
+
     driver.find_element_by_xpath(  # Sign In
         '//button[contains(text(), "SIGN IN") and '
         'contains(@class, "NonMobile")]').click()
 
 
 def claim(driver: webdriver.Chrome) -> bool:
-    """Tries to claim the daily Zens and returns True if successfully claimed,
-     else False.
+    """Try to claim the daily Zens and return True if successfully claimed,
+    else False.
 
     Parameters
     ----------
@@ -105,4 +110,4 @@ if __name__ == '__main__':
     if claim(driver):
         driver.close()
         print("Claim Success")
-        exit(0)
+        sys.exit(0)
